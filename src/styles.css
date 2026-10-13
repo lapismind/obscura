@@ -1,0 +1,98 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+body { font: 13px var(--ui-font); color: var(--fg); transition: opacity .25s; }
+body.faded { opacity: var(--fade); }
+#app { height: 100%; }
+
+/* ---------- 主题 ---------- */
+body {
+  --ui-font: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+  --mono: Consolas, "Cascadia Mono", "Microsoft YaHei UI", monospace;
+}
+.theme-log { --bg: #1e1e1e; --fg: #8f8f8f; --muted: #5c5c5c; --line: #333; --hover: #2a2a2a; --accent: #6a9fd4; --font: var(--mono); }
+.theme-terminal { --bg: #0c0c0c; --fg: #6fbf73; --muted: #3f6e42; --line: #1f2f20; --hover: #152015; --accent: #6fbf73; --font: var(--mono); }
+.theme-paper { --bg: #ffffff; --fg: #333; --muted: #999; --line: #e6e6e6; --hover: #f3f3f3; --accent: #2b579a; --font: "Source Han Serif SC", "SimSun", Georgia, serif; }
+.theme-system { --bg: #f3f3f3; --fg: #454545; --muted: #9a9a9a; --line: #e0e0e0; --hover: #e9e9e9; --accent: #0067c0; --font: var(--ui-font); }
+@media (prefers-color-scheme: dark) {
+  .theme-system { --bg: #202020; --fg: #b8b8b8; --muted: #6a6a6a; --line: #333; --hover: #2b2b2b; --accent: #4cc2ff; }
+}
+
+/* ---------- 阅读小窗 ---------- */
+.reader {
+  position: relative; height: 100%; padding: 6px 12px;
+  background: color-mix(in srgb, var(--bg) calc(var(--alpha) * 100%), transparent);
+  border: 1px solid color-mix(in srgb, var(--line) calc(var(--alpha) * 100%), transparent);
+  border-radius: 6px; cursor: default; user-select: none;
+  /* 窗口高度不是整行倍数时，余量上下平分 */
+  display: flex; flex-direction: column; justify-content: center;
+}
+.reader.edge { border-radius: 0; border-width: 1px 0 0; }
+.viewport { overflow: hidden; }
+.flow { position: relative; font-family: var(--font); font-size: var(--fs); color: var(--fg); }
+.flow p { margin: 0; text-indent: 2em; }
+.flow p.note { text-indent: 0; color: var(--muted); }
+.flow .pic img { display: block; margin: 0 auto; }
+.empty { color: var(--muted); font-size: 12px; line-height: 1.6; }
+.progress { position: absolute; right: 8px; bottom: 2px; font: 10px var(--mono); color: var(--muted); pointer-events: none; }
+.toolbar { position: absolute; top: 3px; right: 4px; display: flex; gap: 2px; opacity: 0; transition: opacity .15s; }
+.reader:hover .toolbar { opacity: 1; }
+.toolbar button { width: 22px; height: 20px; padding: 0; border: 0; border-radius: 4px; background: var(--bg); color: var(--muted); display: grid; place-items: center; }
+.toolbar button:hover { background: var(--hover); color: var(--fg); }
+.toolbar button[hidden] { display: none; }
+.toolbar svg { width: 13px; height: 13px; }
+
+/* ---------- 面板（书架 / 设置） ---------- */
+.panel { height: 100%; display: flex; flex-direction: column; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; font-family: var(--ui-font); }
+.panel-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.panel-head h1 { margin: 0 auto 0 0; font-size: 13px; font-weight: 600; }
+.panel-body { flex: 1; overflow-y: auto; padding: 8px 12px 12px; }
+.panel button, .panel select, .panel input[type="text"] {
+  font: 12px var(--ui-font); color: var(--fg); background: var(--hover); border: 1px solid var(--line); border-radius: 4px; padding: 4px 10px;
+}
+.panel button:hover { border-color: var(--muted); }
+.panel button.link { background: none; border: 0; padding: 2px 6px; color: var(--muted); }
+.panel button.link:hover { color: var(--fg); }
+.panel button.danger:hover { color: #d9534f; }
+.panel ::-webkit-scrollbar { width: 8px; }
+.panel ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+
+/* 目录：子项略淡以区分层级；当前章节用色条 + 淡底色；悬停 / 按下 / 键盘焦点各有反馈 */
+.toc-item {
+  position: relative; padding: 5px 8px; margin-bottom: 2px; border-radius: 4px;
+  cursor: pointer; user-select: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: background-color .12s, color .12s, opacity .12s;
+}
+.toc-item.sub { opacity: .75; }
+.toc-item:hover { background: var(--hover); opacity: 1; }
+.toc-item.current { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); opacity: 1; }
+.toc-item:active { background: var(--line); }
+.toc-item:focus { outline: none; }
+.toc-item:focus-visible { box-shadow: inset 0 0 0 1px var(--accent); }
+.toc-item.current::before { content: ""; position: absolute; left: 0; top: 5px; bottom: 5px; width: 2px; border-radius: 1px; background: var(--accent); }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.chips button { padding: 2px 10px; border-radius: 10px; }
+.chips button.on { border-color: var(--accent); color: var(--accent); }
+.book { display: flex; align-items: center; gap: 8px; padding: 7px 6px; border-radius: 4px; }
+.book:hover { background: var(--hover); }
+.book.current .name { color: var(--accent); }
+.book .info { flex: 1; min-width: 0; cursor: pointer; }
+.book .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.book .meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.book .acts { display: flex; opacity: 0; }
+.book:hover .acts, .book.editing .acts { opacity: 1; }
+.book input[type="text"] { width: 100%; }
+.hint { color: var(--muted); font-size: 12px; padding: 24px 0; text-align: center; line-height: 1.8; }
+
+.settings { display: flex; height: 100%; min-height: 0; }
+.settings nav { width: 92px; padding: 8px 6px; border-right: 1px solid var(--line); }
+.settings nav div { padding: 6px 10px; border-radius: 4px; cursor: pointer; color: var(--muted); }
+.settings nav div.on { background: var(--hover); color: var(--fg); }
+.settings .form { flex: 1; overflow-y: auto; padding: 6px 14px 14px; }
+.field { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px; border-bottom: 1px solid var(--line); }
+.field label { flex: 1; }
+.field small { display: block; color: var(--muted); font-size: 11px; }
+.field input[type="range"] { width: 130px; accent-color: var(--accent); }
+.field input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; }
+.field .keycap { width: 170px; text-align: center; cursor: pointer; }
+.field .keycap.rec { border-color: var(--accent); color: var(--accent); }
+.err { color: #d9534f; font-size: 11px; }
