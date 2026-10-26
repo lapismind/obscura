@@ -33,7 +33,7 @@ readerEl.className = "reader";
 readerEl.innerHTML = `
   <div class="viewport"><div class="flow"></div></div>
   <div class="empty" hidden></div>
-  <div class="progress"></div>
+  <div class="progress" data-a="pct" title="点击输入百分比跳转"></div>
   <div class="toolbar">
     <button data-a="shelf" title="文件 (Ctrl+O)">${icon('<path d="M2 4h12M2 8h12M2 12h8"/>')}</button>
     <button data-a="toc" title="目录 (Ctrl+T)" hidden>${icon('<path d="M5.5 4h8M5.5 8h8M5.5 12h8M2 4h1.5M2 8h1.5M2 12h1.5"/>')}</button>
@@ -48,13 +48,55 @@ const reader = new Reader(viewportEl, readerEl.querySelector<HTMLElement>(".flow
 /** 当前书的目录；没有目录时隐藏目录按钮 */
 let currentToc: TocItem[] = [];
 
+// ---------- 进度 ----------
+/** 正在输入的百分比；为空时底部显示当前进度 */
+let pctInput: HTMLInputElement | null = null;
+
+const progressValue = () => (reader.progress * 100).toFixed(1);
+
+function showProgress() {
+  if (!pctInput) progressEl.textContent = `${progressValue()}%`;
+}
+
+/** 点击底部进度：原地变成输入框，输入 0–100 后回车跳转，Esc 或失焦取消 */
+function editProgress() {
+  if (pctInput || !reader.paras.length) return;
+  const input = document.createElement("input");
+  input.value = progressValue();
+  input.addEventListener("keydown", (e) => {
+    // 输入时不触发阅读快捷键（空格翻页、Esc 老板键等）
+    e.stopPropagation();
+    if (e.key === "Enter") seekPercent(input);
+    else if (e.key === "Escape") closeProgress(input);
+  });
+  input.addEventListener("blur", () => closeProgress(input));
+  pctInput = input;
+  progressEl.replaceChildren(input, "%");
+  input.select();
+  input.focus();
+}
+
+function closeProgress(input: HTMLInputElement) {
+  if (pctInput !== input) return;
+  pctInput = null;
+  showProgress();
+}
+
+function seekPercent(input: HTMLInputElement) {
+  const text = input.value.trim().replace(/%$/, "").trim();
+  const pct = Number(text);
+  // 空输入、非数字或与当前进度相同时不跳，避免进度显示的小数精度带来的偏移
+  if (text && Number.isFinite(pct) && pct !== Number(progressValue())) reader.seek(pct / 100);
+  closeProgress(input);
+}
+
 reader.onMove = (para, line) => {
   const b = currentBook();
   if (!b) return;
   b.para = para;
   b.line = line;
   b.lastRead = Date.now();
-  progressEl.textContent = `${(reader.progress * 100).toFixed(1)}%`;
+  showProgress();
   saveState();
 };
 
@@ -304,6 +346,7 @@ readerEl.addEventListener("click", (e) => {
   const a = (e.target as HTMLElement).closest<HTMLElement>("[data-a]")?.dataset.a;
   if (a === "shelf" || a === "settings" || a === "toc") showView(a);
   if (a === "boss") boss();
+  if (a === "pct") editProgress();
 });
 
 /** 边缘 6px 留给窗口缩放，其余区域按下即可拖动窗口 */
@@ -312,7 +355,7 @@ app.addEventListener("mousedown", (e) => {
   const t = e.target as HTMLElement;
   const edge = 6;
   if (e.clientX < edge || e.clientY < edge || innerWidth - e.clientX < edge || innerHeight - e.clientY < edge) return;
-  if (t.closest("button, input, select, .book, .field, nav")) return;
+  if (t.closest("button, input, select, .book, .field, nav, .progress")) return;
   if (view === "reader" || t.closest(".panel-head")) win.startDragging();
 });
 

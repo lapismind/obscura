@@ -119,6 +119,12 @@ export class Reader {
     if (this.viewport.isConnected) this.emit();
   }
 
+  /** 跳到全文 ratio（0–1）处所在段落的开头 */
+  seek(ratio: number) {
+    const last = Math.max(0, this.paras.length - 1);
+    this.jump(Math.round(Math.min(1, Math.max(0, ratio)) * last), 0);
+  }
+
   next() {
     if (!this.paras.length) return;
     let target = this.viewport.scrollTop + this.pageH;

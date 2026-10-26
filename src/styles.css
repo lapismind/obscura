@@ -33,7 +33,10 @@ body {
 .flow p.note { text-indent: 0; color: var(--muted); }
 .flow .pic img { display: block; margin: 0 auto; }
 .empty { color: var(--muted); font-size: 12px; line-height: 1.6; }
-.progress { position: absolute; right: 8px; bottom: 2px; font: 10px var(--mono); color: var(--muted); pointer-events: none; }
+/* 内边距扩大可点区域，负外边距使文字位置不变 */
+.progress { position: absolute; right: 8px; bottom: 2px; padding: 3px 5px; margin: -3px -5px; font: 10px var(--mono); color: var(--muted); cursor: pointer; }
+.progress:hover { color: var(--fg); }
+.progress input { width: 46px; height: 15px; margin: 0; padding: 0 3px; font: inherit; line-height: 13px; text-align: right; color: var(--fg); background: var(--bg); border: 1px solid var(--accent); border-radius: 3px; outline: none; user-select: text; }
 .toolbar { position: absolute; top: 3px; right: 4px; display: flex; gap: 2px; opacity: 0; transition: opacity .15s; }
 .reader:hover .toolbar { opacity: 1; }
 .toolbar button { width: 22px; height: 20px; padding: 0; border: 0; border-radius: 4px; background: var(--bg); color: var(--muted); display: grid; place-items: center; }
